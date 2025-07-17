@@ -17,6 +17,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/XSAM/otelsql"
+	semconv "go.opentelemetry.io/otel/semconv/v1.40.0"
 
 	"github.com/authelia/authelia/v4/internal/configuration/schema"
 	"github.com/authelia/authelia/v4/internal/utils"
@@ -31,7 +33,7 @@ type PostgreSQLProvider struct {
 func NewPostgreSQLProvider(config *schema.Configuration, caCertPool *x509.CertPool) (provider *PostgreSQLProvider, err error) {
 	var p SQLProvider
 
-	if p, err = NewSQLProvider(config, providerPostgres, "pgx", dsnPostgreSQL(config.Storage.PostgreSQL, caCertPool)); err != nil {
+	if p, err = NewSQLProvider(config, providerPostgres, "pgx", dsnPostgreSQL(config.Storage.PostgreSQL, caCertPool), otelOptionsPostgreSQL(config.Storage.PostgreSQL)...); err != nil {
 		return nil, err
 	}
 
@@ -190,6 +192,18 @@ func NewPostgreSQLProvider(config *schema.Configuration, caCertPool *x509.CertPo
 	provider.schema = config.Storage.PostgreSQL.Schema
 
 	return provider, nil
+}
+
+func otelOptionsPostgreSQL(config *schema.StoragePostgreSQL) ([]otelsql.Option) {
+	host, port := dsnPostgreSQLHostPort(config.Address)
+	return []otelsql.Option{
+		otelsql.WithAttributes(
+			semconv.DBSystemNamePostgreSQL,
+			semconv.DBNamespace(config.Database),
+			semconv.ServerAddress(host),
+			semconv.ServerPort(int(port)),
+		),
+	}
 }
 
 func dsnPostgreSQL(config *schema.StoragePostgreSQL, globalCACertPool *x509.CertPool) (dsn string) {

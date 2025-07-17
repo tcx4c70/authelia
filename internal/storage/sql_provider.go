@@ -18,6 +18,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/rpadovani/sqlx-v2"
 	"github.com/sirupsen/logrus"
+	"github.com/XSAM/otelsql"
 
 	"github.com/authelia/authelia/v4/internal/configuration/schema"
 	"github.com/authelia/authelia/v4/internal/logging"
@@ -40,7 +41,7 @@ func NewProvider(config *schema.Configuration, caCertPool *x509.CertPool) (provi
 }
 
 // NewSQLProvider generates a generic SQLProvider to be used with other SQL provider NewUp's.
-func NewSQLProvider(config *schema.Configuration, name, driverName, dataSourceName string) (provider SQLProvider, err error) {
+func NewSQLProvider(config *schema.Configuration, name, driverName, dataSourceName string, opts ...otelsql.Option) (provider SQLProvider, err error) {
 	var (
 		db         *sqlx.DB
 		encryption []byte
@@ -50,10 +51,18 @@ func NewSQLProvider(config *schema.Configuration, name, driverName, dataSourceNa
 		return provider, fmt.Errorf("error occurred deriving encryption key: %w", err)
 	}
 
-	if db, err = sqlx.Open(driverName, dataSourceName); err != nil {
+	var _db *sql.DB
+	if config.Telemetry.Traces.Enabled {
+		_db, err = otelsql.Open(driverName, dataSourceName, opts...)
+	} else {
+		_db, err = sql.Open(driverName, dataSourceName)
+	}
+
+	if err != nil {
 		return provider, fmt.Errorf("error opening database: %w", err)
 	}
 
+	db = sqlx.NewDb(_db, driverName)
 	provider = SQLProvider{
 		db:         &SQLXWrapDB{db},
 		name:       name,

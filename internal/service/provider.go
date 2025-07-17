@@ -39,6 +39,7 @@ func GetProvisioners() []Provisioner {
 	return []Provisioner{
 		ProvisionServer,
 		ProvisionServerMetrics,
+		ProvisionTraces,
 		ProvisionUsersFileWatcher,
 		ProvisionLoggingSignal,
 		ProvisionGarbageCollector,

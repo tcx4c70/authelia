@@ -26,6 +26,7 @@ import (
 	"github.com/authelia/authelia/v4/internal/storage"
 	"github.com/authelia/authelia/v4/internal/templates"
 	"github.com/authelia/authelia/v4/internal/totp"
+	"github.com/authelia/authelia/v4/internal/telemetry"
 	"github.com/authelia/authelia/v4/internal/webauthn"
 )
 
@@ -47,6 +48,7 @@ type Providers struct {
 	Regulator             *regulation.Regulator
 	OpenIDConnect         *oidc.OpenIDConnectProvider
 	Metrics               metrics.Provider
+	Telemetry             *telemetry.Provider
 	NTP                   *ntp.Provider
 	UserProvider          authentication.UserProvider
 	StorageProvider       storage.Provider

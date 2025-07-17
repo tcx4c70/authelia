@@ -26,6 +26,7 @@ import (
 	"github.com/authelia/authelia/v4/internal/storage"
 	"github.com/authelia/authelia/v4/internal/templates"
 	"github.com/authelia/authelia/v4/internal/totp"
+	"github.com/authelia/authelia/v4/internal/telemetry"
 	"github.com/authelia/authelia/v4/internal/webauthn"
 )
 
@@ -79,6 +80,10 @@ func NewProviders(config *schema.Configuration, caCertPool *x509.CertPool) (prov
 		if providers.Metrics, err = metrics.NewPrometheus(); err != nil {
 			errs = append(errs, err)
 		}
+	}
+
+	if config.Telemetry.Traces.Enabled || config.Telemetry.Logs.Enabled {
+		providers.Telemetry = telemetry.NewProvider(&config.Telemetry)
 	}
 
 	return providers, warns, errs

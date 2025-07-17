@@ -74,6 +74,8 @@ const (
 	FieldProvider            = "provider"
 	FieldCaller              = "caller"
 	FieldStack               = "stack"
+	FieldTraceID             = "trace_id"
+	FieldSpanID              = "span_id"
 )
 
 // Stack trace hook values.
