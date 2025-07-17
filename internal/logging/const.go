@@ -68,6 +68,8 @@ const (
 	FieldGranted             = "granted"
 	FieldStatus              = "status"
 	FieldProvider            = "provider"
+	FieldTraceID             = "trace_id"
+	FieldSpanID              = "span_id"
 )
 
 var (

@@ -170,6 +170,8 @@ const (
 // Telemetry Error constants.
 const (
 	errFmtTelemetryMetricsAddress = "telemetry: metrics: option 'address' with value '%s' is invalid: %w"
+	errStrTelemetryExporterRequired = "telemetry: %s: one of 'grpc' or 'http' exporter must be configured"
+	errStrTelemetryExporterMutuallyExclusive = "telemetry: %s: only one of 'grpc' or 'http' exporter can be configured"
 )
 
 // OpenID Error constants.

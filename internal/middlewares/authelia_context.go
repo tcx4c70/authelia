@@ -15,6 +15,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/authelia/authelia/v4/internal/authentication"
 	"github.com/authelia/authelia/v4/internal/clock"
@@ -25,6 +26,7 @@ import (
 	"github.com/authelia/authelia/v4/internal/random"
 	"github.com/authelia/authelia/v4/internal/session"
 	"github.com/authelia/authelia/v4/internal/storage"
+	"github.com/authelia/authelia/v4/internal/telemetry"
 	"github.com/authelia/authelia/v4/internal/utils"
 )
 
@@ -38,6 +40,11 @@ func NewRequestLogger(ctx *fasthttp.RequestCtx) (entry *logrus.Entry) {
 
 	if uri, ok := ctx.UserValue(UserValueKeyRawURI).(string); ok {
 		fields[logging.FieldPathRaw] = uri
+	}
+
+	if spanCtx := trace.SpanContextFromContext(telemetry.SpanContextFromContext(ctx)); spanCtx.IsValid() {
+		fields[logging.FieldTraceID] = spanCtx.TraceID().String()
+		fields[logging.FieldSpanID]  = spanCtx.SpanID().String()
 	}
 
 	return logging.Logger().WithFields(fields)

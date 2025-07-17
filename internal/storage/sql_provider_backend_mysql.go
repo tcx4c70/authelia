@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/go-sql-driver/mysql"
+	"github.com/XSAM/otelsql"
+	semconv "go.opentelemetry.io/otel/semconv/v1.40.0"
 
 	"github.com/authelia/authelia/v4/internal/configuration/schema"
 	"github.com/authelia/authelia/v4/internal/utils"
@@ -21,7 +23,7 @@ type MySQLProvider struct {
 func NewMySQLProvider(config *schema.Configuration, caCertPool *x509.CertPool) (provider *MySQLProvider, err error) {
 	var sqlProvider SQLProvider
 
-	if sqlProvider, err = NewSQLProvider(config, providerMySQL, providerMySQL, dsnMySQL(config.Storage.MySQL, caCertPool)); err != nil {
+	if sqlProvider, err = NewSQLProvider(config, providerMySQL, providerMySQL, dsnMySQL(config.Storage.MySQL, caCertPool), otelOptionsMySQL(config.Storage.MySQL)...); err != nil {
 		return nil, err
 	}
 
@@ -35,6 +37,27 @@ func NewMySQLProvider(config *schema.Configuration, caCertPool *x509.CertPool) (
 	provider.sqlFmtRenameTable = queryFmtMySQLRenameTable
 
 	return provider, nil
+}
+
+func otelOptionsMySQL(config *schema.StorageMySQL) ([]otelsql.Option) {
+	opts := []otelsql.Option{
+		otelsql.WithAttributes(
+			semconv.DBSystemNameMySQL,
+			semconv.DBNamespace(config.Database),
+		),
+	}
+	if (config.Address.IsUnixDomainSocket()) {
+		opts = append(
+			opts,
+			otelsql.WithAttributes(semconv.ServerAddress(config.Address.NetworkAddress())),
+		)
+	} else {
+		opts = append(
+			opts,
+			otelsql.WithAttributes(semconv.ServerAddress(config.Address.SocketHostname()), semconv.ServerPort(int(config.Address.Port()))),
+		)
+	}
+	return opts
 }
 
 func dsnMySQL(config *schema.StorageMySQL, caCertPool *x509.CertPool) (dataSourceName string) {

@@ -15,4 +15,5 @@ const (
 	serviceTypeWatcher = "watcher"
 	serviceTypeSignal  = "signal"
 	serviceTypeGC      = "gc"
+	serviceTypeTraces  = "traces"
 )
